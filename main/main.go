@@ -46,6 +46,10 @@ func setUpCommands(app *cli.App) {
 				Name:  "cpuset",
 				Usage: "set cpuset limit",
 			},
+			cli.StringFlag{
+				Name:  "v",
+				Usage: "volume",
+			},
 		},
 		Action: func(context *cli.Context) error {
 			if len(context.Args()) < 1 {
@@ -61,7 +65,8 @@ func setUpCommands(app *cli.App) {
 				CPUSet:      context.String("cpuset"),
 				CPUShare:    context.String("cpushare"),
 			}
-			RunHandler(tty, cmd, res)
+			volume := context.String("v")
+			RunHandler(tty, cmd, res, volume)
 			return nil
 		},
 	}

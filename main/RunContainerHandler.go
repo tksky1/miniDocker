@@ -10,7 +10,7 @@ import (
 )
 
 // NewParentProcess 准备一个在新namespace运行的新进程
-func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
+func NewParentProcess(tty bool, volume string) (*exec.Cmd, *os.File) {
 	readPipe, writePipe, _ := os.Pipe()
 	retCmd := exec.Command("/proc/self/exe", "init")
 	// 设置新namespace的参数以完成隔离
@@ -25,14 +25,17 @@ func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
 	}
 	// 传入管道文件读取端的句柄
 	retCmd.ExtraFiles = []*os.File{readPipe}
-	retCmd.Dir = "/root/busybox" // TODO
+	mnt := "/root/mnt/"
+	root := "/root/"
+	newWorkSpace(root, mnt, volume)
+	retCmd.Dir = mnt
 	return retCmd, writePipe
 }
 
 // RunHandler 处理minidocker run,拉起新进程运行minidocker init
-func RunHandler(tty bool, cmd []string, res *subsystems.ResourceConfig) {
+func RunHandler(tty bool, cmd []string, res *subsystems.ResourceConfig, volume string) {
 
-	parentProcess, writePipe := NewParentProcess(tty)
+	parentProcess, writePipe := NewParentProcess(tty, volume)
 	if parentProcess == nil {
 		log.Error("Error creating parent process")
 		return
@@ -63,5 +66,11 @@ func RunHandler(tty bool, cmd []string, res *subsystems.ResourceConfig) {
 	}
 
 	_ = parentProcess.Wait()
+
+	mnt := "/root/mnt/"
+	root := "/root/"
+	DeleteWorkSpace(root, mnt, volume)
+	log.Infof("容器已退出！")
+
 	os.Exit(0)
 }
