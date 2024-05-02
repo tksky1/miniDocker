@@ -80,8 +80,22 @@ func setUpCommands(app *cli.App) {
 		},
 	}
 
+	commitCommand := cli.Command{
+		Name:  "commit",
+		Usage: "commit a container into image",
+		Action: func(context *cli.Context) error {
+			if len(context.Args()) != 1 {
+				return fmt.Errorf("minidocker commit [containerName]")
+			}
+			imageName := context.Args().Get(0)
+			commitContainer(imageName)
+			return nil
+		},
+	}
+
 	app.Commands = []cli.Command{
 		runCommand,
 		initCommand,
+		commitCommand,
 	}
 }
